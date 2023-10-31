@@ -1,0 +1,22 @@
+# Spacefile Docs: https://go.deta.dev/docs/spacefile/v0
+v: 0
+icon: src/assets/icon.png
+micros:
+  - name: MazeRace
+    src: ./
+    engine: python3.9
+    primary: true
+    run: uvicorn main:app --log-level warning
+    include: 
+    - main.py
+    - src
+    public_routes:
+      - '/interactions'
+    presets:
+      env:
+      - name: DISCORD_APPLICATION_ID
+      - name: DISCORD_PUBLIC_KEY
+      - name: DISCORD_BOT_TOKEN
+      - name: ERROR_LOG_WEBHOOK
+      - name: SPACE_DATA_KEY
+      - name: SYNC_PASSWORD
