@@ -7,4 +7,4 @@ async def ping_command(interaction):
   now = time.time()
   since = now - created_at
   content = 'Pong! Latency: `{:.2f}ms`'.format(since * 1000)
-  await interaction.response(content)
+  await interaction.response.send(content)

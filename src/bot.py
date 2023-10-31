@@ -10,7 +10,8 @@ import traceback
 import contextlib
 import discohook
 from starlette.responses import PlainTextResponse
-from .commands.ping import ping_command
+from .cogs.ping import ping_command
+from .cogs.maze import maze_command
 from .utils.database import Database
 
 def run():
@@ -46,8 +47,8 @@ def run():
       await interaction.response.followup('Sorry, an error has occured.')
     else:
       await interaction.response.send('Sorry, an error has occured (after responding).')
-    trace = traceback.TracebackException.from_exception(error)
-    app.errors.append(trace)
+    trace = traceback.TracebackException.from_exception(error).format()
+    app.errors.append(tuple(trace))
     text = ''.join(trace)
     print(text)
     await error_log_webhook.send(text[:2000])
@@ -65,7 +66,8 @@ def run():
 
   # Add commands
   app.add_commands(
-    ping_command
+    ping_command,
+    maze_command
   )
 
   # Attach / route for debugging
