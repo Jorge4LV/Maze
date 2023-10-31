@@ -10,9 +10,10 @@ import traceback
 import contextlib
 import discohook
 from starlette.responses import PlainTextResponse
+from .utils.database import Database
 from .cogs.ping import ping_command
 from .cogs.maze import maze_command
-from .utils.database import Database
+from .screens.lobby import LobbyView
 
 def run():
   
@@ -47,8 +48,8 @@ def run():
       await interaction.response.followup('Sorry, an error has occured.')
     else:
       await interaction.response.send('Sorry, an error has occured (after responding).')
-    trace = traceback.TracebackException.from_exception(error).format()
-    app.errors.append(tuple(trace))
+    trace = tuple(traceback.TracebackException.from_exception(error).format())
+    app.errors.append(trace)
     text = ''.join(trace)
     print(text)
     await error_log_webhook.send(text[:2000])
@@ -69,6 +70,10 @@ def run():
     ping_command,
     maze_command
   )
+
+  # Load persistent views/compoennts  
+  app.load_components(LobbyView())
+
 
   # Attach / route for debugging
   @app.route('/', methods = ['GET'])
