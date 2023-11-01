@@ -11,6 +11,7 @@ import contextlib
 import discohook
 from starlette.responses import PlainTextResponse
 from .utils.database import Database
+from .utils import constants, helpers
 from .cogs.ping import ping_command
 from .cogs.maze import maze_command
 from .screens.lobby import LobbyView
@@ -44,6 +45,8 @@ def run():
   error_log_webhook = discohook.PartialWebhook.from_url(app, os.getenv('ERROR_LOG_WEBHOOK'))
   @app.on_interaction_error()
   async def on_error(interaction, error):
+    if isinstance(error, discohook.errors.CheckFailure):
+      return print('Ignoring check failure', str(interaction.author), interaction.data['custom_id'].split(':')[0])
     if interaction.responded:
       await interaction.response.followup('Sorry, an error has occured.')
     else:
@@ -57,7 +60,11 @@ def run():
   # Set custom ID parser
   @app.custom_id_parser()
   async def custom_id_parser(interaction, custom_id): # interaction is unused
-    return custom_id
+    return ':'.join(custom_id.split(':')[:2]) # name:v0.0 returned
+
+  # Attach helpers and constants, might be useful
+  app.constants = constants
+  app.helpers = helpers
 
   # Set bot started at timestamp
   app.started_at = datetime.datetime.utcnow()
@@ -74,7 +81,6 @@ def run():
   # Load persistent views/compoennts  
   app.load_components(LobbyView())
 
-
   # Attach / route for debugging
   @app.route('/', methods = ['GET'])
   async def root(request):
@@ -85,7 +91,6 @@ def run():
         'Test: {}'.format(app.test),
         '',
         'Errors: {}'.format(json.dumps(app.errors, indent = 2)),
-        '',
       ])
     )
 
