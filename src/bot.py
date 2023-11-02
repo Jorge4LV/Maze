@@ -15,6 +15,7 @@ from .utils import constants, helpers
 from .cogs.ping import ping_command
 from .cogs.maze import maze_command
 from .screens.lobby import LobbyView
+from .screens.maze import MazeView
 
 def run():
   
@@ -66,6 +67,11 @@ def run():
   app.constants = constants
   app.helpers = helpers
 
+  # Attach bot caches
+  app.mazes = {} # maze_id : (2d maze grid, maze image)
+  app.users = {} # user_id : User/Member, saves time when starting the race / skip user fetch
+  app.avatars = {} # user_id:level : user images scaled proportionally for that maze level
+
   # Set bot started at timestamp
   app.started_at = datetime.datetime.utcnow()
 
@@ -78,8 +84,9 @@ def run():
     maze_command
   )
 
-  # Load persistent views/compoennts  
+  # Load persistent views/components  
   app.load_components(LobbyView())
+  app.load_components(MazeView())
 
   # Attach / route for debugging
   @app.route('/', methods = ['GET'])
@@ -89,6 +96,12 @@ def run():
         'Started: {}'.format(app.started_at),
         '',
         'Test: {}'.format(app.test),
+        '',
+        'Cache: {}'.format(json.dumps({
+          'Mazes' : app.mazes,
+          'Users' : app.users,
+          'Avatars' : app.avatars
+        }, indent = 2, default = repr)),
         '',
         'Errors: {}'.format(json.dumps(app.errors, indent = 2)),
       ])
