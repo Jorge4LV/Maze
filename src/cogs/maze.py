@@ -10,4 +10,4 @@ from ..utils.helpers import level_to_size
   ])
 ])
 async def maze_command(interaction, level):
-  await LobbyView(interaction, data = level).send()
+  await LobbyView(interaction, level).send()

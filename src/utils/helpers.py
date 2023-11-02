@@ -1,6 +1,9 @@
+import io
+import math
 import asyncio
 import mazelib
 import discohook
+import numpy as np
 from mazelib.generate.Prims import Prims
 from mazelib.solve.BacktrackingSolver import BacktrackingSolver
 from PIL import Image, ImageOps
@@ -16,6 +19,13 @@ def level_to_seconds(level):
     return TIME_LIMIT_BASE + 5 * 2
   return TIME_LIMIT_BASE
 
+def get_power_of_2(n): # 147 becomes 256
+  i = 2
+  while True:
+    if i >= n:
+      return i
+    i *= 2
+
 def generate_maze_id(): # returns a unique 16 letter string
   chars = tuple(string.ascii_letters + string.digits + '-_')
   return ''.join(random.choice(chars) for _ in range(16))
@@ -30,50 +40,56 @@ def generate_maze(level): # this is blocking
   # thats solely the reason why its slow, decrease those values to make it faster
   return generate_maze_id(), m
 
-def draw_maze(grid): # blocking, returns PIL.Image
-  size = len(grid)
-  grid = grid.reshape(-1, grid.shape[-1]) # becomes [(0, 0, 0), (255, 255, 255), ...]
-  print(grid)
-  maze_image = Image.new('RGB', (size, size))
-  maze_image.putdata(grid)
-  maze_image = maze_image.rotate(90) # adjust since pil draws from top left
-  maze_image = ImageOps.flip(maze_image)
-  maze_image = maze_image.resize((IMAGE_SIZE, IMAGE_SIZE), Image.Resampling.NEAREST)
-  maze_grid = m.grid # the grid to calculate player movements on
-  maze_grid[m.start] = 0 # makes start and end pathway tiles, by default they're walls
-  maze_grid[m.end] = 0
+async def draw_maze(flat_grid, start, end): # returns 2d grid and PIL.Image
+  size = int(math.sqrt(len(flat_grid))) # starts as flattened so we can reuse this from db
+  maze_grid = flat_grid.reshape((size, size)) # unflatten it
+  maze_grid[start] = 0 # makes start and end pathway tiles, by default they're walls
+  maze_grid[end] = 0
+
+  image_grid = (1 - maze_grid) * 255 # invert mazelib's numbers to be 0 = black, 1 = white
+  image_grid = np.repeat(image_grid[:, :, np.newaxis], 3, axis = 2) # triple the cells to become R,G,B
+  image_grid[start] = (255, 255, 0) # start = YELLOW
+  image_grid[end] = (0, 255, 0) # end = GREEN
+  
+  maze_image = Image.fromarray(image_grid.astype(np.uint8))
+  maze_image = await asyncio.to_thread(maze_image.resize, (IMAGE_SIZE, IMAGE_SIZE), Image.Resampling.NEAREST)
   return maze_grid, maze_image
 
-  """  # draw maze background first if not cached
-    maze = app.mazes.get(maze_id)
-    if not maze:
-      # fetch maze grid if not cached
-      maze_grid = app.    
-  """
+async def draw_player_on_maze(app, maze_id, position, user, level):
+  
+  # draw maze background first if not cached
+  maze_data = app.mazes.get(maze_id)
+  if not maze_data:
+    maze_data = await app.db.get_maze(maze_id)
+    if not maze_data: # maze was already finished
+      return
+    app.mazes[maze_id] = maze_data
+  maze_grid, maze_image = maze_data
+
+  factor = IMAGE_SIZE/len(maze_grid) # size of 1 tile in pixels
 
   # fetch user background if not cached
-
-  # merge them onto each other
-
-  # return file object
-  # discohook.File('maze.png', content = bytes)
-
+  key = '{}:{}'.format(user.id, level) # can reuse avatar for same levels somewhere else
+  user_image = app.avatars.get(key)
+  if not user_image:
+    size = get_power_of_2(round(factor)) # avatar png sizes can only be in powers of 2
+    url = '.'.join(str(user.avatar).split('.')[:-1]) + '.png?size=' + str(size)
+    async with app.session.get(url) as resp:
+      if resp.status != 200:
+        raise ValueError('Fetch avatar returned bad status', resp.status)
+      user_image = Image.open(io.BytesIO(await resp.read()))
+    size = round(factor * 0.8) # avatar image is slightly smaller than a tile on the map
+    user_image = await asyncio.to_thread(user_image.resize, (size, size), Image.Resampling.NEAREST)
+    app.avatars[key] = user_image
   
-  # # make copy of maze background
-  # im = maze_image.copy()
+  # make copy of maze background
+  im = maze_image.copy()
 
-  # # paste user image on background at specific coords
-  # im.paste(user_image, tuple(int(round(i * factor + factor * 0.1)) for i in position))
+  # paste user image onto maze background image, offset at the given position, math.floor feels better than round
+  im.paste(user_image, tuple(math.floor(i * factor + factor * 0.1) for i in reversed(position))) # 0.1 is cuz of 0.8 adjustment
 
-  # # upload to our cdn and return the url
-  # buffer = io.BytesIO()
-  # im.save(buffer, 'PNG')
-  # channel = bot.get_channel(CDN_CHANNEL)
-  # if not channel:
-  #   channel = await bot.fetch_channel(CDN_CHANNEL)
-  # buffer.seek(0)
-  # message = await channel.send(file = discord.File(fp = buffer, filename = 'maze.png'))
-  # return message.attachments[0].url
-
-def draw_player_on_maze(maze_im): # blocking, returns discohook.File
-  pass
+  # return as file object
+  buffer = io.BytesIO()
+  im.save(buffer, 'PNG')
+  buffer.seek(0) # have to do this or it doesn't load the file
+  return discohook.File('maze.png', content = buffer.read())

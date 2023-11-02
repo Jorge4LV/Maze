@@ -8,6 +8,7 @@ import asyncio
 import datetime
 import traceback
 import contextlib
+import aiohttp
 import discohook
 from starlette.responses import PlainTextResponse
 from .utils.database import Database
@@ -19,18 +20,19 @@ from .screens.maze import MazeView
 
 def run():
   
-  # Lifespan to attach extra .db attribute, cancel + shutdown is for local testing
+  # Lifespan to attach extra .session and .db attributes, cancel + shutdown is for local testing
   @contextlib.asynccontextmanager
   async def lifespan(app):
-    async with Database(app, os.getenv('SPACE_DATA_KEY')) as app.db:
-      try:
-        yield
-      except asyncio.CancelledError:
-        print('Ignoring cancelled error. (CTRL+C)')
-      else:
-        print('Closed without errors.')
-      finally:
-        await app.http.session.close() # close bot session
+    async with aiohttp.ClientSession() as app.session:
+      async with Database(app, os.getenv('SPACE_DATA_KEY')) as app.db:
+        try:
+          yield
+        except asyncio.CancelledError:
+          print('Ignoring cancelled error. (CTRL+C)')
+        else:
+          print('Closed without errors.')
+        finally:
+          await app.http.session.close() # close bot session
 
   # Define the bot
   app = discohook.Client(

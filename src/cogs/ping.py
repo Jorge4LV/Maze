@@ -1,5 +1,7 @@
 import time
 import discohook
+import io
+from PIL import Image
 
 @discohook.command.slash('ping', description = 'Ping test the bot!')
 async def ping_command(interaction):

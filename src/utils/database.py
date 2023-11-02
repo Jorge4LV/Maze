@@ -6,9 +6,7 @@ class Database(Deta):
     super().__init__(key)
     self.app = app
 
-
   async def create_maze(self, maze_id, grid, start, end, timeout, token, player_ids):
-
     data = {
       'grid' : grid,
       'start' : start,
@@ -24,12 +22,10 @@ class Database(Deta):
     #record = Record(data, key = maze_id)
 
     #await self.app.insert(record)
-    
 
-  async def get_maze(self, maze_id): # function reloaded
+  async def get_maze(self, maze_id): # server reloaded
     query = Query()
-
-    pass
+    query.equals('maze_id', maze_id)
 
   async def update_maze(self, player_id, seconds): # someone won
     pass
