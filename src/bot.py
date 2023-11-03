@@ -10,7 +10,7 @@ import traceback
 import contextlib
 import aiohttp
 import discohook
-from starlette.responses import PlainTextResponse
+from starlette.responses import Response, PlainTextResponse
 from .utils.database import Database
 from .utils import constants, helpers
 from .cogs.ping import ping_command
@@ -116,6 +116,7 @@ def run():
     event = data['event']
     if event['id'] == 'check':
       await app.db.end_timed_out_mazes()
+    return Response()
 
   # Return app object
   return app
