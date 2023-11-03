@@ -20,7 +20,7 @@ def level_to_size(level):
 
 def level_to_seconds(level):
   if level > TIME_LIMIT_THRESHOLD:
-    return TIME_LIMIT_BASE + 5 * 2
+    return TIME_LIMIT_BASE + 5 * level
   return TIME_LIMIT_BASE
 
 def get_power_of_2(n): # 147 becomes 256

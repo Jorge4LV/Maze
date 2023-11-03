@@ -21,7 +21,7 @@ class Database(Deta):
     for user_id in player_ids:
       data[user_id] = None # None = DQed, otherwise time taken
 
-    # automatically clears records after 15 mins (interaction followup limit)
+    # automatically clears records after 15 mins (interaction followup timelimit)
     record = Record(maze_id, expires_at = token_expires_at, **data)
 
     await self.mazes.insert(record)

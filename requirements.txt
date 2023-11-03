@@ -1,4 +1,4 @@
-git+https://github.com/jnsougata/discohook
-git+https://github.com/jnsougata/deta
-mazelib
-Pillow
+discohook @ git+https://github.com/jnsougata/discohook@7bbd4dc
+deta @ git+https://github.com/jnsougata/deta@e498e3b
+mazelib==0.9.14
+Pillow==10.1.0
