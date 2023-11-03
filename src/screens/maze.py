@@ -10,8 +10,7 @@ def get_valid_moves(maze_grid, position): # returns disabled true/false for left
   down_disabled = y == border or bool(maze_grid[y + 1][x])
   return left_disabled, right_disabled, up_disabled, down_disabled
 
-async def move(interaction, x, y):
-
+async def before_move_check(interaction): # stop processing if timed out already or not maze owner
   data = interaction.payload['message']['components'][0]['components'][0]['custom_id'].split(':')[2:]
   maze_id = data[0]
   position = tuple(map(int, data[1:3]))
@@ -23,16 +22,36 @@ async def move(interaction, x, y):
   # check if this maze is already over
   if time.time() > timeout:
     embed = interaction.message.embeds[0]
+    embed.set_image('attachment://maze.png')
     embed.description = 'Times up. You did not finish the maze.'
     await interaction.response.update_message(embed = embed, view = None)
-    # send maze results here if maze hasnt ended already, check db with maze id with lock
-    return  
+    await interaction.client.db.check_maze_finished(maze_id)
+    return
+    
+  # check if they are maze owner
+  if user_id != interaction.author.id: # after, lets them update the maze if it ended
+    await interaction.response.send('This is not your maze.', ephemeral = True)
+    return
   
+  return maze_id, position, end, timeout, level, user_id
+
+async def move(interaction, x, y):
+  data = await before_move_check(interaction)
+  if not data:
+    return
+  
+  maze_id, position, end, timeout, level, user_id = data
+
   position = (position[0] + x, position[1] + y)
   app = interaction.client
   helpers = app.helpers
 
   image = await helpers.draw_player_on_maze(app, maze_id, position, interaction.author, level)
+  if not image: # image wont be drawn if maze was already finished, rare
+    embed = interaction.message.embeds[0]
+    embed.set_image('attachment://maze.png')
+    embed.description = 'Timed out. You did not finish the maze.'
+    return await interaction.response.update_message(embed = embed, view = None)
 
   embed = interaction.message.embeds[0]
   embed.set_image(image)
@@ -45,17 +64,19 @@ async def move(interaction, x, y):
     time_taken = round(time.time() - started_at, 2)
     embed.description = 'You finished in `{:.2f}s`!'.format(time_taken)
     await interaction.response.update_message(embed = embed, view = None, file = image)
-    # update maze results or send results here if it hasn't ended already
+    await app.db.update_maze(maze_id, user_id, time_taken)
     return
 
-  if x == -1:
+  if y == -1:
     text = 'left'
-  elif x == 1:
-    text = 'right'
   elif y == 1:
-    text = 'up'
-  elif y == -1:
+    text = 'right'
+  elif x == 1:
     text = 'down'
+  elif x == -1:
+    text = 'up'
+  else:
+    raise ValueError('Bad move input', x, y)
   
   embed.description = 'You moved {}.'.format(text)
   
@@ -79,8 +100,17 @@ async def down_button(interaction):
 
 @discohook.button.new('Give Up', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'giveup:v0.0')
 async def giveup_button(interaction):
-  await interaction.response.send('clicked giveup')
-  # update maze results or send results here if it hasn't ended already
+  data = await before_move_check(interaction)
+  if not data:
+    return
+
+  maze_id = data[0]
+  
+  embed = interaction.message.embeds[0]
+  embed.set_image('attachment://maze.png')
+  embed.description = 'You gave up.'
+  await interaction.response.update_message(embed = embed, view = None)
+  await interaction.client.db.update_maze(maze_id, interaction.author.id, 0)
 
 class MazeView(discohook.View):
   def __init__(self, interaction = None, flag = None, data = None):

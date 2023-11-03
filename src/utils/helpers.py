@@ -64,9 +64,10 @@ async def draw_player_on_maze(app, maze_id, position, user, level):
   # draw maze background first if not cached
   maze_data = app.mazes.get(maze_id)
   if not maze_data:
-    flat_grid, start, end = await app.db.get_maze(maze_id)
-    if not flat_grid: # maze was already finished
-      raise ValueError('do something here/return/update?')
+    record = await app.db.get_maze(maze_id)
+    if not record: # maze was already finished
+      return
+    flat_grid, start, end = record['grid'], tuple(record['start']), tuple(record['end'])
     maze_data = await draw_maze(np.array(flat_grid), start, end)
     app.mazes[maze_id] = maze_data
   maze_grid, maze_image = maze_data
