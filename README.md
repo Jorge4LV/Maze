@@ -8,7 +8,7 @@ https://discord.com/api/oauth2/authorize?scope=bot&client_id=999676682749354055
 You can use the source to learn how to make bots with the [discohook][2] library and [deta][3].
 
 ## Demo
-https://github.com/imptype/MazeRace/assets/106537315/78d73723-7b44-4347-bd0d-53e0a4859547
+https://github.com/imptype/MazeRace/assets/106537315/468eb3c5-bbdb-4e75-986f-456b34c8d74a
 
 [1]: https://discord.gg/discord-developers
 [2]: https://github.com/jnsougata/discohook
