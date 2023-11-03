@@ -62,37 +62,64 @@ async def move(interaction, x, y):
   # calculate steps below, this can probably be simplified in the future
   grid = maze_data[0]
   border = len(grid) - 1
-  steps = 0
+  steps = 1
+  position = [position[0] + y, position[1] + x] # position is in the format [y, x], due to mazelib
 
-  if x == -1:
-    text = 'left'
-    # while True:
-    #   if not position[0]: # touching left border
-    #     break
-    #   elif not grid[position[0]-1, position[1]]: # tile ahead of that is a wall
-    #     print(grid[position[0]-1, position[1]])
-    #     break
-    #   elif steps: # only if you moved already
-    #     if position[1]: # if ur not touching bottom border
-    #       if not grid[position[0], position[1]-1]: # stop if path tile is below
-    #         break
-    #     if position[1] != border: # etc
-    #       if not grid[position[0], position[1]+1]:
-    #         break
-    position[1] -= 1
-    #steps += 1
-
-  elif x == 1:
-    text = 'right'
-    position[1] += 1
+  if y == -1:
+    text = 'up'
+    while True:
+      if not position[0]: # touching top border
+        break
+      elif grid[position[0]-1, position[1]]: # tile ahead of that is a wall
+        break
+      elif position[1] and not grid[position[0], position[1]-1]: # not touching left border and a path tile is on left
+        break
+      elif position[1] != border and not grid[position[0], position[1]+1]: # not touching right border and path tile is on right
+        break
+      position[0] -= 1
+      steps += 1
 
   elif y == 1:
     text = 'down'
-    position[0] += 1
+    while True:
+      if position[0] == border: # touching bottom border
+        break
+      elif grid[position[0]+1, position[1]]: # tile ahead of that is a wall
+        break
+      elif position[1] and not grid[position[0], position[1]-1]:
+        break
+      elif position[1] != border and not grid[position[0], position[1]+1]:
+        break
+      position[0] += 1
+      steps += 1
 
-  elif y == -1:
-    text = 'up'
-    position[0] -= 1
+  elif x == -1:
+    text = 'left'
+    while True:
+      if not position[1]: # touching left border
+        break
+      elif grid[position[0], position[1]-1]: # tile ahead of that is a wall
+        break
+      elif position[0] and not grid[position[0]-1, position[1]]: # not touching bottom border and path tile is below
+        break
+      elif position[0] != border and not grid[position[0]+1, position[1]]: # not touching top border and path tile is above
+        break
+      position[1] -= 1
+      steps += 1
+
+  elif x == 1:
+    text = 'right'
+    while True:
+      if position[1] == border: # touching left border
+        break
+      elif grid[position[0], position[1]+1]: # tile ahead of that is a wall
+        break
+      elif position[0] and not grid[position[0]-1, position[1]]:
+        break
+      elif position[0] != border and not grid[position[0]+1, position[1]]:
+        break
+      position[1] += 1
+      steps += 1
 
   else:
     raise ValueError('Bad move input', x, y)
@@ -113,17 +140,9 @@ async def move(interaction, x, y):
     await app.db.update_maze(maze_id, user_id, time_taken)
     return
   
-  embed.description = 'You moved {}. Maze ends <t:{}:R>.'.format(text, timeout)
+  embed.description = 'You moved {} {} step(s).\nMaze ends <t:{}:R>.'.format(text, steps, timeout)
   
   await MazeView(interaction, 1, data = (maze_id, position, end, timeout, level, user_id, embed, image)).update()
-
-@discohook.button.new(emoji = '⬅️', custom_id = 'left:v0.0')
-async def left_button(interaction):
-  await move(interaction, -1, 0)
-
-@discohook.button.new(emoji = '➡️', custom_id = 'right:v0.0')
-async def right_button(interaction):
-  await move(interaction, 1, 0)
 
 @discohook.button.new(emoji = '⬆️', custom_id = 'up:v0.0')
 async def up_button(interaction):
@@ -132,6 +151,14 @@ async def up_button(interaction):
 @discohook.button.new(emoji = '⬇️', custom_id = 'down:v0.0')
 async def down_button(interaction):
   await move(interaction, 0, 1)
+
+@discohook.button.new(emoji = '⬅️', custom_id = 'left:v0.0')
+async def left_button(interaction):
+  await move(interaction, -1, 0)
+
+@discohook.button.new(emoji = '➡️', custom_id = 'right:v0.0')
+async def right_button(interaction):
+  await move(interaction, 1, 0)
 
 @discohook.button.new('Give Up', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'giveup:v0.0')
 async def giveup_button(interaction):
@@ -178,34 +205,34 @@ class MazeView(discohook.View):
       maze_grid = interaction.client.mazes[maze_id][0]
       left_disabled, right_disabled, up_disabled, down_disabled = get_valid_moves(maze_grid, position)
 
-      dynamic_left_button = discohook.Button(
-        emoji = left_button.emoji,
-        custom_id = left_button.custom_id + data,
-        disabled = left_disabled
-      )
-
-      dynamic_right_button = discohook.Button(
-        emoji = right_button.emoji,
-        custom_id = right_button.custom_id + ':', # this is so it doesn't overwrite the actual callback
-        disabled = right_disabled
-      )
-
       dynamic_up_button = discohook.Button(
         emoji = up_button.emoji,
-        custom_id = up_button.custom_id + ':',
+        custom_id = up_button.custom_id + data,
         disabled = up_disabled
       )
 
       dynamic_down_button = discohook.Button(
         emoji = down_button.emoji,
-        custom_id = down_button.custom_id + ':',
+        custom_id = down_button.custom_id + ':', # this is so it doesn't overwrite the actual callback
         disabled = down_disabled
       )
+
+      dynamic_left_button = discohook.Button(
+        emoji = left_button.emoji,
+        custom_id = left_button.custom_id + ':',
+        disabled = left_disabled
+      )
+
+      dynamic_right_button = discohook.Button(
+        emoji = right_button.emoji,
+        custom_id = right_button.custom_id + ':',
+        disabled = right_disabled
+      )
       
-      self.add_buttons(dynamic_left_button, dynamic_right_button, dynamic_up_button, dynamic_down_button, giveup_button)
+      self.add_buttons(dynamic_up_button, dynamic_down_button, dynamic_left_button, dynamic_right_button, giveup_button)
 
     else: # persistent
-      self.add_buttons(left_button, right_button, up_button, down_button, giveup_button)
+      self.add_buttons(up_button, down_button, left_button, right_button, giveup_button)
 
   async def followup(self): # for race begin only
     await self.interaction.response.followup(self.content, embed = self.embed, view = self, file = self.image)

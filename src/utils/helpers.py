@@ -81,7 +81,7 @@ async def draw_player_on_maze(app, maze_data, position, user, level):
   # make copy of maze background
   im = maze_image.copy()
 
-  # paste user image onto maze background image, offset at the given position
+  # paste user image onto maze background image, offset at the given position (y, x) mazelib -> (x, y) pillow paste 
   im.paste(user_image, tuple(round(i * factor + factor * 0.1) for i in reversed(position))) # 0.1 is cuz of 0.8 adjustment
 
   # return as file object

@@ -15,14 +15,14 @@ class Database(Deta):
       'start' : start,
       'end' : end,
       'timeout' : timeout,
-      'token' : token, # to do Maze results followup
-      'token_expires_at' : token_expires_at
+      'token' : token # to do Maze results followup
     }
 
     for user_id in player_ids:
       data[user_id] = None # None = DQed, otherwise time taken
 
-    record = Record(maze_id, **data)
+    # automatically clears records after 15 mins (interaction followup limit)
+    record = Record(maze_id, expires_at = token_expires_at, **data)
 
     await self.mazes.insert(record)
 
@@ -41,9 +41,6 @@ class Database(Deta):
 
   async def end_maze(self, record):
     await self.mazes.delete(record['key'])
-
-    if time.time() > record['token_expires_at']: # followup token expired, can't send maze results, rare
-      return
 
     embed = discohook.Embed(
       'Times up! Maze Results:',

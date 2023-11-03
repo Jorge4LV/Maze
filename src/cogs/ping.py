@@ -8,5 +8,3 @@ async def ping_command(interaction):
   since = now - created_at
   content = 'Pong! Latency: `{:.2f}ms`'.format(since * 1000)
   await interaction.response.send(content)
-
-  await interaction.client.db.end_timed_out_mazes()
