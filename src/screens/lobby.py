@@ -32,7 +32,8 @@ async def start_button(interaction):
 
   maze_id, m = await asyncio.to_thread(helpers.generate_maze, level)
 
-  app.mazes[maze_id] = await helpers.draw_maze(m.grid.flatten(), m.start, m.end)
+  maze_data = await helpers.draw_maze(m.grid.flatten(), m.start, m.end)
+  app.mazes[maze_id] = maze_data
 
   seconds = helpers.level_to_seconds(level)
 
@@ -49,7 +50,7 @@ async def start_button(interaction):
       ]),
       color = COLOR_BLURPLE
     )
-    image = await helpers.draw_player_on_maze(app, maze_id, m.start, user, level)
+    image = await helpers.draw_player_on_maze(app, maze_data, m.start, user, level)
     embed.set_image(image)
     return user_id, embed, image
 

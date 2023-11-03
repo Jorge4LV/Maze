@@ -1,5 +1,6 @@
 import time
 import discohook
+import numpy as np
 
 def get_valid_moves(maze_grid, position): # returns disabled true/false for left, right, up, down
   border = len(maze_grid) - 1
@@ -13,8 +14,8 @@ def get_valid_moves(maze_grid, position): # returns disabled true/false for left
 async def before_move_check(interaction): # stop processing if timed out already or not maze owner
   data = interaction.payload['message']['components'][0]['components'][0]['custom_id'].split(':')[2:]
   maze_id = data[0]
-  position = tuple(map(int, data[1:3]))
-  end = tuple(map(int, data[3:5]))
+  position = list(map(int, data[1:3]))
+  end = list(map(int, data[3:5]))
   timeout = int(data[5])
   level = int(data[6])
   user_id = data[7]
@@ -41,17 +42,62 @@ async def move(interaction, x, y):
     return
   
   maze_id, position, end, timeout, level, user_id = data
-
-  position = (position[0] + x, position[1] + y)
   app = interaction.client
   helpers = app.helpers
 
-  image = await helpers.draw_player_on_maze(app, maze_id, position, interaction.author, level)
-  if not image: # image wont be drawn if maze was already finished, rare
-    embed = interaction.message.embeds[0]
-    embed.set_image('attachment://maze.png')
-    embed.description = 'Timed out. You did not finish the maze.'
-    return await interaction.response.update_message(embed = embed, view = None)
+  # draw maze background first if not cached
+  maze_data = app.mazes.get(maze_id)
+  if not maze_data:
+    record = await app.db.get_maze(maze_id) # server reloaded
+
+    if not record: # maze was already finished
+      embed = interaction.message.embeds[0]
+      embed.set_image('attachment://maze.png')
+      embed.description = 'Timed out. You did not finish the maze.'
+      return await interaction.response.update_message(embed = embed, view = None)
+
+    maze_data = await helpers.draw_maze(np.array(record['grid']), tuple(record['start']), tuple(record['end']))
+    app.mazes[maze_id] = maze_data
+
+  # calculate steps below, this can probably be simplified in the future
+  grid = maze_data[0]
+  border = len(grid) - 1
+  steps = 0
+
+  if x == -1:
+    text = 'left'
+    # while True:
+    #   if not position[0]: # touching left border
+    #     break
+    #   elif not grid[position[0]-1, position[1]]: # tile ahead of that is a wall
+    #     print(grid[position[0]-1, position[1]])
+    #     break
+    #   elif steps: # only if you moved already
+    #     if position[1]: # if ur not touching bottom border
+    #       if not grid[position[0], position[1]-1]: # stop if path tile is below
+    #         break
+    #     if position[1] != border: # etc
+    #       if not grid[position[0], position[1]+1]:
+    #         break
+    position[1] -= 1
+    #steps += 1
+
+  elif x == 1:
+    text = 'right'
+    position[1] += 1
+
+  elif y == 1:
+    text = 'down'
+    position[0] += 1
+
+  elif y == -1:
+    text = 'up'
+    position[0] -= 1
+
+  else:
+    raise ValueError('Bad move input', x, y)
+
+  image = await helpers.draw_player_on_maze(app, maze_data, tuple(position), interaction.author, level) # numpy uses position tuple index
 
   embed = interaction.message.embeds[0]
   embed.set_image(image)
@@ -66,37 +112,26 @@ async def move(interaction, x, y):
     await interaction.response.update_message(embed = embed, view = None, file = image)
     await app.db.update_maze(maze_id, user_id, time_taken)
     return
-
-  if y == -1:
-    text = 'left'
-  elif y == 1:
-    text = 'right'
-  elif x == 1:
-    text = 'down'
-  elif x == -1:
-    text = 'up'
-  else:
-    raise ValueError('Bad move input', x, y)
   
-  embed.description = 'You moved {}.'.format(text)
+  embed.description = 'You moved {}. Maze ends <t:{}:R>.'.format(text, timeout)
   
   await MazeView(interaction, 1, data = (maze_id, position, end, timeout, level, user_id, embed, image)).update()
 
 @discohook.button.new(emoji = '⬅️', custom_id = 'left:v0.0')
 async def left_button(interaction):
-  await move(interaction, 0, -1)
+  await move(interaction, -1, 0)
 
 @discohook.button.new(emoji = '➡️', custom_id = 'right:v0.0')
 async def right_button(interaction):
-  await move(interaction, 0, 1)
+  await move(interaction, 1, 0)
 
 @discohook.button.new(emoji = '⬆️', custom_id = 'up:v0.0')
 async def up_button(interaction):
-  await move(interaction, -1, 0)
+  await move(interaction, 0, -1) # pillow draws from top left, so this is negative
 
 @discohook.button.new(emoji = '⬇️', custom_id = 'down:v0.0')
 async def down_button(interaction):
-  await move(interaction, 1, 0)
+  await move(interaction, 0, 1)
 
 @discohook.button.new('Give Up', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'giveup:v0.0')
 async def giveup_button(interaction):

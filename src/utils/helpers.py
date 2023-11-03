@@ -59,17 +59,7 @@ async def draw_maze(flat_grid, start, end): # returns 2d grid and PIL.Image
   maze_image = await asyncio.to_thread(maze_image.resize, (IMAGE_SIZE, IMAGE_SIZE), Image.Resampling.NEAREST)
   return maze_grid, maze_image
 
-async def draw_player_on_maze(app, maze_id, position, user, level):
-  
-  # draw maze background first if not cached
-  maze_data = app.mazes.get(maze_id)
-  if not maze_data:
-    record = await app.db.get_maze(maze_id)
-    if not record: # maze was already finished
-      return
-    flat_grid, start, end = record['grid'], tuple(record['start']), tuple(record['end'])
-    maze_data = await draw_maze(np.array(flat_grid), start, end)
-    app.mazes[maze_id] = maze_data
+async def draw_player_on_maze(app, maze_data, position, user, level):
   maze_grid, maze_image = maze_data
 
   factor = IMAGE_SIZE/len(maze_grid) # size of 1 tile in pixels

@@ -109,5 +109,13 @@ def run():
       ])
     )
 
+  # Actions handler
+  @app.route('/__space/v0/actions', methods = ['POST'])
+  async def actions(request):
+    data = await request.json()
+    event = data['event']
+    if event['id'] == 'check':
+      await app.db.end_timed_out_mazes()
+
   # Return app object
   return app
