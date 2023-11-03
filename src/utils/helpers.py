@@ -1,3 +1,7 @@
+"""
+Code that might be reused in other places or just odd.
+"""
+
 import io
 import math
 import asyncio
@@ -60,9 +64,10 @@ async def draw_player_on_maze(app, maze_id, position, user, level):
   # draw maze background first if not cached
   maze_data = app.mazes.get(maze_id)
   if not maze_data:
-    maze_data = await app.db.get_maze(maze_id)
-    if not maze_data: # maze was already finished
-      return
+    flat_grid, start, end = await app.db.get_maze(maze_id)
+    if not flat_grid: # maze was already finished
+      raise ValueError('do something here/return/update?')
+    maze_data = await draw_maze(np.array(flat_grid), start, end)
     app.mazes[maze_id] = maze_data
   maze_grid, maze_image = maze_data
 
@@ -85,8 +90,8 @@ async def draw_player_on_maze(app, maze_id, position, user, level):
   # make copy of maze background
   im = maze_image.copy()
 
-  # paste user image onto maze background image, offset at the given position, math.floor feels better than round
-  im.paste(user_image, tuple(math.floor(i * factor + factor * 0.1) for i in reversed(position))) # 0.1 is cuz of 0.8 adjustment
+  # paste user image onto maze background image, offset at the given position
+  im.paste(user_image, tuple(round(i * factor + factor * 0.1) for i in reversed(position))) # 0.1 is cuz of 0.8 adjustment
 
   # return as file object
   buffer = io.BytesIO()
