@@ -20,3 +20,9 @@ micros:
       - name: ERROR_LOG_WEBHOOK
       - name: SPACE_DATA_KEY
       - name: SYNC_PASSWORD
+    actions:
+      - id: 'check'
+        name: 'Check'
+        description: 'Checks for active timed out mazes'
+        trigger: 'schedule'
+        default_interval: '* * * * *'
