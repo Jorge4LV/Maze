@@ -52,7 +52,7 @@ async def start_button(interaction):
     )
     image = await helpers.draw_player_on_maze(app, maze_data, m.start, user, level)
     embed.set_image(image)
-    return user_id, embed, image
+    return user_id, embed
 
   results = await asyncio.gather(*[prepare_mazes(user_id) for user_id in player_ids])
   
@@ -61,8 +61,8 @@ async def start_button(interaction):
   await app.db.create_maze(maze_id, m.grid.flatten().tolist(), m.start, m.end, timeout, interaction.token, token_expires_at, player_ids)
   
   await asyncio.gather(*[ # sends altogether afterwards so everyone starts somewhat at the same time
-    MazeView(interaction, data = (maze_id, m.start, m.end, timeout, level, user_id, embed, image)).followup() 
-    for user_id, embed, image in results
+    MazeView(interaction, data = (maze_id, m.start, m.end, timeout, level, user_id, embed)).followup() 
+    for user_id, embed in results
   ])
 start_button.checks.append(is_host)
 

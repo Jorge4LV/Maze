@@ -136,13 +136,13 @@ async def move(interaction, x, y):
     started_at = timeout - seconds
     time_taken = round(time.time() - started_at, 2)
     embed.description = 'You finished in `{:.2f}s`!'.format(time_taken)
-    await interaction.response.update_message(embed = embed, view = None, file = image)
+    await interaction.response.update_message(embed = embed, view = None)
     await app.db.update_maze(maze_id, user_id, time_taken)
     return
   
   embed.description = 'You moved {} {} step(s).\nMaze ends <t:{}:R>.'.format(text, steps, timeout)
   
-  await MazeView(interaction, 1, data = (maze_id, position, end, timeout, level, user_id, embed, image)).update()
+  await MazeView(interaction, 1, data = (maze_id, position, end, timeout, level, user_id, embed)).update()
 
 @discohook.button.new(emoji = '⬆️', custom_id = 'up:v0.0')
 async def up_button(interaction):
@@ -182,19 +182,17 @@ class MazeView(discohook.View):
       self.interaction = interaction
       
       if not flag: # race begin
-        maze_id, start, end, timeout, level, user_id, embed, image = data
+        maze_id, start, end, timeout, level, user_id, embed = data
         
         self.content = '<@{}>'.format(user_id)
         self.embed = embed
-        self.image = image
 
         position = start
 
       elif flag == 1: # update position (clicked a button)
-        maze_id, position, end, timeout, level, user_id, embed, image = data
+        maze_id, position, end, timeout, level, user_id, embed = data
 
         self.embed = embed
-        self.image = image
       
       else:
         raise ValueError('Unhandled MazeView flag', flag)
@@ -235,7 +233,7 @@ class MazeView(discohook.View):
       self.add_buttons(up_button, down_button, left_button, right_button, giveup_button)
 
   async def followup(self): # for race begin only
-    await self.interaction.response.followup(self.content, embed = self.embed, view = self, file = self.image)
+    await self.interaction.response.followup(self.content, embed = self.embed, view = self)
 
   async def update(self): # for race begin only
-    await self.interaction.response.update_message(embed = self.embed, view = self, file = self.image)
+    await self.interaction.response.update_message(embed = self.embed, view = self)
