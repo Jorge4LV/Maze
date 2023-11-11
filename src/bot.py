@@ -15,6 +15,8 @@ from .utils.database import Database
 from .utils import constants, helpers
 from .cogs.ping import ping_command
 from .cogs.maze import maze_command
+from .cogs.stats import stats_command
+from .cogs.top import top_command
 from .screens.lobby import LobbyView
 from .screens.maze import MazeView
 
@@ -71,8 +73,9 @@ def run():
 
   # Attach bot caches
   app.mazes = {} # maze_id : (2d maze grid, maze image)
-  app.users = {} # user_id : User/Member, saves time when starting the race / skip user fetch
+  app.users = {} # user_id : User/Member, saves time when starting the race & updating highscores / skip user fetch
   app.avatars = {} # user_id:level : user images scaled proportionally for that maze level
+  app.stats = {} # userid : {level:timetaken}, read only, used for stats command
 
   # Set bot started at timestamp
   app.started_at = datetime.datetime.utcnow()
@@ -83,7 +86,9 @@ def run():
   # Add commands
   app.add_commands(
     ping_command,
-    maze_command
+    maze_command,
+    stats_command,
+    top_command
   )
 
   # Load persistent views/components  

@@ -131,11 +131,10 @@ async def move(interaction, x, y):
 
   # if win, stop the view otherwise send an update
   if position == end:
-    embed = interaction.message.embeds[0]
     seconds = helpers.level_to_seconds(level)
     started_at = timeout - seconds
-    time_taken = round(time.time() - started_at, 2)
-    embed.description = 'You finished in `{:.2f}s`!'.format(time_taken)
+    time_taken = int((time.time() - started_at) * 100)
+    embed.description = 'You finished in `{}s`!'.format(time_taken / 100)
     await interaction.response.update_message(embed = embed, view = None)
     await app.db.update_maze(maze_id, user_id, time_taken)
     return
