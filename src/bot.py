@@ -19,6 +19,7 @@ from .cogs.stats import stats_command
 from .cogs.top import top_command
 from .screens.lobby import LobbyView
 from .screens.maze import MazeView
+from .screens.top import TopView
 
 def run():
   
@@ -76,6 +77,7 @@ def run():
   app.users = {} # user_id : User/Member, saves time when starting the race & updating highscores / skip user fetch
   app.avatars = {} # user_id:level : user images scaled proportionally for that maze level
   app.stats = {} # userid : {level:timetaken}, read only, used for stats command
+  app.tops = {} # level : [(userid, name, timetaken, timestamp), ...], used for top command
 
   # Set bot started at timestamp
   app.started_at = datetime.datetime.utcnow()
@@ -94,6 +96,7 @@ def run():
   # Load persistent views/components  
   app.load_components(LobbyView())
   app.load_components(MazeView())
+  app.load_components(TopView())
 
   # Attach / route for debugging
   @app.route('/', methods = ['GET'])

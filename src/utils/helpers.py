@@ -10,7 +10,7 @@ import discohook
 import numpy as np
 from mazelib.generate.Prims import Prims
 from mazelib.solve.BacktrackingSolver import BacktrackingSolver
-from PIL import Image, ImageOps
+from PIL import Image
 from .constants import TIME_LIMIT_BASE, TIME_LIMIT_THRESHOLD, IMAGE_SIZE
 import string
 import random

@@ -145,15 +145,21 @@ class Database(Deta):
         query.equals('level', level)
         records = (await self.stats.fetch([query], limit = 10))['items']
 
-        if records: # incase the leaderboards is empty
-          if records[0]['key'] in new_keys:
-            new_wr_score = new_keys[records[0]['key']][0] # user id
+        # leaderboards wont be empty due to inserting records in it just now
+        if records[0]['key'] in new_keys:
+          new_wr_score = new_keys[records[0]['key']][0] # user id
 
-          new_t10_scores = {
-            new_keys[record['key']][0] # user id
-            for record in records[1:]
-            if record['key'] in new_keys
-          }
+        new_t10_scores = {
+          new_keys[record['key']][0] # user id
+          for record in records[1:]
+          if record['key'] in new_keys
+        }
+
+        # update top leaderboards cache for that level
+        self.app.tops[level] = [
+          (record['user_id'], record['name'], record['time_taken'], record['timestamp'])
+          for record in records
+        ]
 
     embed = discohook.Embed(
       'Times up! Maze Results:',
@@ -203,3 +209,12 @@ class Database(Deta):
       record['level'] : (record['time_taken'], record['timestamp'])
       for record in records
     }
+  
+  async def get_top(self, level):
+    query = Query()
+    query.equals('level', level)
+    records = (await self.stats.fetch([query], limit = 10))['items']
+    return [
+      (record['user_id'], record['name'], record['time_taken'], record['timestamp'])
+      for record in records
+    ]

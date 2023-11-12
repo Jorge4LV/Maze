@@ -1,4 +1,5 @@
 import discohook
+from ..screens.top import TopView
 from ..utils.constants import MAX_LEVELS
 
 @discohook.command.slash('top', description = 'View the global leaderboards!', options = [
@@ -7,5 +8,5 @@ from ..utils.constants import MAX_LEVELS
     for i in range(1, MAX_LEVELS + 1)
   ])
 ])
-async def top_command(interaction, level = None):
-  await interaction.response.send('top {}'.format(level))
+async def top_command(interaction, level = 1):
+  await TopView(interaction, level).send()

@@ -11,7 +11,7 @@ async def is_host(interaction):
     return False
   return True
 
-@discohook.button.new('Start', emoji = '🏁', style = discohook.ButtonStyle.green, custom_id = 'start:v0.0')
+@discohook.button.new('Start', emoji = '🏁', style = discohook.ButtonStyle.green, custom_id = 'lobby_start:v0.0')
 async def start_button(interaction):
   embed = interaction.message.embeds[0]
 
@@ -66,7 +66,7 @@ async def start_button(interaction):
   ])
 start_button.checks.append(is_host)
 
-@discohook.button.new('Join', emoji = '🚪', custom_id = 'join:v0.0')
+@discohook.button.new('Join', emoji = '🚪', custom_id = 'lobby_join:v0.0')
 async def join_button(interaction):
   embed = interaction.message.embeds[0]
   text = embed.fields[1]['value']
@@ -89,7 +89,7 @@ async def join_button(interaction):
 
   await interaction.response.update_message(embed = embed)
 
-@discohook.button.new('Cancel', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'cancel:v0.0')
+@discohook.button.new('Cancel', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'lobby_cancel:v0.0')
 async def cancel_button(interaction):
   embed = interaction.message.embeds[0]
   embed.color = COLOR_RED

@@ -143,23 +143,23 @@ async def move(interaction, x, y):
   
   await MazeView(interaction, 1, data = (maze_id, position, end, timeout, level, user_id, embed)).update()
 
-@discohook.button.new(emoji = '⬆️', custom_id = 'up:v0.0')
+@discohook.button.new(emoji = '⬆️', custom_id = 'maze_up:v0.0')
 async def up_button(interaction):
   await move(interaction, 0, -1) # pillow draws from top left, so this is negative
 
-@discohook.button.new(emoji = '⬇️', custom_id = 'down:v0.0')
+@discohook.button.new(emoji = '⬇️', custom_id = 'maze_down:v0.0')
 async def down_button(interaction):
   await move(interaction, 0, 1)
 
-@discohook.button.new(emoji = '⬅️', custom_id = 'left:v0.0')
+@discohook.button.new(emoji = '⬅️', custom_id = 'maze_left:v0.0')
 async def left_button(interaction):
   await move(interaction, -1, 0)
 
-@discohook.button.new(emoji = '➡️', custom_id = 'right:v0.0')
+@discohook.button.new(emoji = '➡️', custom_id = 'maze_right:v0.0')
 async def right_button(interaction):
   await move(interaction, 1, 0)
 
-@discohook.button.new('Give Up', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'giveup:v0.0')
+@discohook.button.new('Give Up', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'maze_giveup:v0.0')
 async def giveup_button(interaction):
   data = await before_move_check(interaction)
   if not data:
