@@ -181,7 +181,13 @@ class Database(Deta):
     )
 
     interaction = discohook.Interaction(self.app, {'application_id' : self.app.application_id, 'token' : token}) # partial interaction
-    await interaction.response.followup(embed = embed)    
+    await interaction.response.followup(embed = embed)
+
+    if new_wr_score:
+      text = '<@{}> (`{}`) achieved a new world record for Level {}: `{}s`!'.format(
+        new_wr_score, names[new_wr_score], level, scores[new_wr_score] / 100
+      )
+      await self.app.wr_log_webhook.send(text)
 
   async def check_maze_finished(self, maze_id): # checks if maze that maze timed out or all players finished
     record = await self.get_maze(maze_id)

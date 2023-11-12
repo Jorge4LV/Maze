@@ -20,6 +20,7 @@ micros:
       - name: ERROR_LOG_WEBHOOK
       - name: SPACE_DATA_KEY
       - name: SYNC_PASSWORD
+      - name: WR_LOG_WEBHOOK
     actions:
       - id: 'check'
         name: 'Check'

@@ -68,6 +68,9 @@ def run():
   async def custom_id_parser(interaction, custom_id): # interaction is unused
     return ':'.join(custom_id.split(':')[:2]) # name:v0.0 returned
 
+  # Add world record log webhook
+  app.wr_log_webhook = discohook.PartialWebhook.from_url(app, os.getenv('WR_LOG_WEBHOOK'))
+
   # Attach helpers and constants, might be useful
   app.constants = constants
   app.helpers = helpers
