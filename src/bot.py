@@ -113,7 +113,9 @@ def run():
         'Cache: {}'.format(json.dumps({
           'Mazes' : app.mazes,
           'Users' : app.users,
-          'Avatars' : app.avatars
+          'Avatars' : app.avatars,
+          'Stats' : app.stats,
+          'Tops' : app.tops
         }, indent = 2, default = repr)),
         '',
         'Errors: {}'.format(json.dumps(app.errors, indent = 2)),
