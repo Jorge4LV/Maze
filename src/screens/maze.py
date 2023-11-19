@@ -234,5 +234,5 @@ class MazeView(discohook.View):
   async def followup(self): # for race begin only
     await self.interaction.response.followup(self.content, embed = self.embed, view = self)
 
-  async def update(self): # for race begin only
+  async def update(self):
     await self.interaction.response.update_message(embed = self.embed, view = self)
