@@ -68,12 +68,15 @@ async def draw_player_on_maze(app, maze_data, position, user, level):
   key = '{}:{}'.format(user.id, level) # can reuse avatar for same levels somewhere else
   user_image = app.avatars.get(key)
   if not user_image:
-    size = get_power_of_2(round(factor)) # avatar png sizes can only be in powers of 2
-    url = '.'.join(str(user.avatar).split('.')[:-1]) + '.png?size=' + str(size)
-    async with app.session.get(url) as resp:
-      if resp.status != 200:
-        raise ValueError('Fetch avatar returned bad status', resp.status)
-      user_image = Image.open(io.BytesIO(await resp.read()))
+    if user.avatar.default:
+      user_image = await asyncio.to_thread(Image.open, 'src/assets/{}.png'.format(user.avatar._hash))
+    else:
+      size = get_power_of_2(round(factor)) # avatar png sizes can only be in powers of 2
+      url = '.'.join(str(user.avatar).split('.')[:-1]) + '.png?size=' + str(size)
+      async with app.session.get(url) as resp:
+        if resp.status != 200:
+          raise ValueError('Fetch avatar returned bad status', resp.status)
+        user_image = await asyncio.to_thread(Image.open, io.BytesIO(await resp.read()))
     size = round(factor * 0.8) # avatar image is slightly smaller than a tile on the map
     user_image = await asyncio.to_thread(user_image.resize, (size, size), Image.Resampling.NEAREST)
     app.avatars[key] = user_image
