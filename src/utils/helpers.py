@@ -90,5 +90,4 @@ async def draw_player_on_maze(app, maze_data, position, user, level):
   # return as file object
   buffer = io.BytesIO()
   im.save(buffer, 'PNG')
-  buffer.seek(0) # have to do this or it doesn't load the file
-  return discohook.File('maze.png', content = buffer.read())
+  return discohook.File('maze.png', content = buffer.getvalue())
