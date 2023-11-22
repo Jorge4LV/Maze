@@ -189,7 +189,7 @@ class Database(Deta):
       )
       await self.app.wr_log_webhook.send(text)
 
-  async def check_maze_finished(self, maze_id): # checks if maze that maze timed out or all players finished
+  async def check_maze_finished(self, maze_id): # checks if that maze timed out or all players finished
     record = await self.get_maze(maze_id)
     if record: # exists
       if time.time() > record['timeout'] or \
