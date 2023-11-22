@@ -77,7 +77,7 @@ class TopView(discohook.View):
       description = '\n'.join(
         '{}. {} - `{}s` (<t:{}:R>)'.format(
           i + 1, 
-          name if toggle else '<@{}>'.format(user_id), 
+          '<@{}>'.format(user_id) if toggle else name, 
           time_taken / 100, 
           timestamp
         )
