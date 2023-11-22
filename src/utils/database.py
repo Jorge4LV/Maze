@@ -64,7 +64,7 @@ class Database(Deta):
       if time_taken # only if they won / none = didn't finish / 0 = gave up
     }
     new_pb_scores = {} # beat their personal best
-    new_t10_scores = {} # top 10
+    new_top_scores = {} # top 2-10
     new_wr_score = None # top 1
 
     if winner_scores: # if some one beat the maze, check for new pbs
@@ -149,9 +149,9 @@ class Database(Deta):
         if records[0]['key'] in new_keys:
           new_wr_score = new_keys[records[0]['key']][0] # user id
 
-        new_t10_scores = {
-          new_keys[record['key']][0] # user id
-          for record in records[1:]
+        new_top_scores = {
+          new_keys[record['key']][0] : i + 2 # user id : place
+          for i, record in enumerate(records[1:])
           if record['key'] in new_keys
         }
 
@@ -170,7 +170,7 @@ class Database(Deta):
           '`{}s`{}'.format(
             time_taken / 100,
             ' (NEW WORLD RECORD!!!)' if user_id == new_wr_score
-            else ' (New Top 10!!)' if user_id in new_t10_scores
+            else ' (New Top {}!!)'.format(new_top_scores[user_id]) if user_id in new_top_scores
             else ' (New PB!)' if user_id in new_pb_scores
             else ''
           ) if time_taken else 'FAILED!'
