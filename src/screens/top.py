@@ -72,12 +72,13 @@ class TopView(discohook.View):
       data = await app.db.get_top(level)
       app.tops[level] = data
 
+    url = 'https://discord.com/channels/@me/{}'
     self.embed = discohook.Embed(
       'Level {} Leaderboards'.format(level),
       description = '\n'.join(
         '{}. {} - `{}s` (<t:{}:R>)'.format(
           i + 1, 
-          '<@{}>'.format(user_id) if toggle else name, 
+          '<@{}>'.format(user_id) if toggle else '[{}]({})'.format(name, url.format(user_id)), 
           time_taken / 100, 
           timestamp
         )
