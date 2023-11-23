@@ -47,9 +47,9 @@ class Database(Deta):
 
     scores = dict(sorted(  # userid (str) : score (int), score is in 0.01s
       (
-      (k, v)
-      for k, v in record.items()
-      if k.isdigit()
+        (k, v)
+        for k, v in record.items()
+        if k.isdigit()
       ),
       key = lambda x: x[1] if x[1] else float('inf')
     ))
