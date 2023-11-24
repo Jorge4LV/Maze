@@ -4,16 +4,16 @@ Code that might be reused in other places or just odd.
 
 import io
 import math
+import string
+import random
 import asyncio
 import mazelib
 import discohook
 import numpy as np
-from mazelib.generate.Prims import Prims
+from mazelib.generate.AldousBroder import AldousBroder
 from mazelib.solve.BacktrackingSolver import BacktrackingSolver
 from PIL import Image
 from .constants import TIME_LIMIT_BASE, TIME_LIMIT_THRESHOLD, IMAGE_SIZE
-import string
-import random
 
 def level_to_size(level):
   return (level + 2) * 2 + 1
@@ -37,7 +37,7 @@ def generate_maze_id(): # returns a unique 16 letter string
 def generate_maze(level): # this is blocking
   size = level + 2
   m = mazelib.Maze()
-  m.generator = Prims(size, size)
+  m.generator = AldousBroder(size, size)
   m.solver = BacktrackingSolver()
   m.generate_monte_carlo(10, 3, 1.0) 
   # ^ this essentially generates 10 mazes, with 3 different entrances = 30 variations, and picks the hardest one
