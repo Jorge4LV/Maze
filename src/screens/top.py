@@ -72,7 +72,7 @@ class TopView(discohook.View):
       data = await app.db.get_top(level)
       app.tops[level] = data
 
-    url = 'https://discord.com/channels/@me/{}'
+    url = 'https://discord.com/users/{}'
     self.embed = discohook.Embed(
       'Level {} Leaderboards'.format(level),
       description = '\n'.join(
