@@ -64,7 +64,7 @@ async def start_button(interaction):
   token_expires_at = int(interaction.created_at + 60 * 15)
   await app.db.create_maze(maze_id, m.grid.flatten().tolist(), level, m.start, m.end, timeout, interaction.token, token_expires_at, player_ids)
   
-  await asyncio.gather(*[ # sends altogether afterwards so to ensure everyone starts somewhat at the same time
+  await asyncio.gather(*[ # sends altogether afterwards to ensure everyone starts somewhat at the same time
     MazeView(interaction, data = (maze_id, m.start, m.end, timeout, level, user_id, embed)).followup() 
     for user_id, embed in results
   ])
