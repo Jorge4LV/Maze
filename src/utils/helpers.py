@@ -4,8 +4,8 @@ Code that might be reused in other places or just odd.
 
 import io
 import math
-import string
 import random
+import string
 import asyncio
 import mazelib
 import discohook
@@ -34,7 +34,7 @@ def generate_maze_id(): # returns a unique 16 letter string
   chars = tuple(string.ascii_letters + string.digits + '-_')
   return ''.join(random.choice(chars) for _ in range(16))
 
-def generate_maze(level): # this is blocking
+def generate_maze(level): # blocking
   size = level + 2
   m = mazelib.Maze()
   m.generator = Prims(size, size)
@@ -44,7 +44,7 @@ def generate_maze(level): # this is blocking
   # thats solely the reason why its slow, decrease those values to make it faster
   return generate_maze_id(), m
 
-async def draw_maze(flat_grid, start, end): # returns 2d grid and PIL.Image
+def draw_maze(flat_grid, start, end): # blocking, returns 2d grid and PIL.Image
   size = int(math.sqrt(len(flat_grid))) # starts as flattened so we can reuse this from db
   maze_grid = flat_grid.reshape((size, size)) # unflatten it
   maze_grid[start] = 0 # makes start and end pathway tiles, by default they're walls
@@ -55,11 +55,12 @@ async def draw_maze(flat_grid, start, end): # returns 2d grid and PIL.Image
   image_grid[start] = (255, 255, 0) # start = YELLOW
   image_grid[end] = (0, 255, 0) # end = GREEN
   
-  maze_image = Image.fromarray(image_grid.astype(np.uint8))
-  maze_image = await asyncio.to_thread(maze_image.resize, (IMAGE_SIZE, IMAGE_SIZE), Image.Resampling.NEAREST)
+  maze_image = Image.fromarray(image_grid.astype(np.uint8)) # this blocks
+  maze_image = maze_image.resize((IMAGE_SIZE, IMAGE_SIZE), Image.Resampling.NEAREST) # so does this
+  
   return maze_grid, maze_image
 
-async def draw_player_on_maze(app, maze_data, position, user, level):
+async def draw_player_on_maze(app, maze_data, position, user, level): # async to fetch user avatar
   maze_grid, maze_image = maze_data
 
   factor = IMAGE_SIZE/len(maze_grid) # size of 1 tile in pixels
@@ -81,13 +82,18 @@ async def draw_player_on_maze(app, maze_data, position, user, level):
     user_image = await asyncio.to_thread(user_image.resize, (size, size), Image.Resampling.NEAREST)
     app.avatars[key] = user_image
   
-  # make copy of maze background
-  im = maze_image.copy()
+  def blocking():    
+    # make copy of maze background
+    im = maze_image.copy()
 
-  # paste user image onto maze background image, offset at the given position (y, x) mazelib -> (x, y) pillow paste 
-  im.paste(user_image, tuple(round(i * factor + factor * 0.1) for i in reversed(position))) # 0.1 is cuz of 0.8 adjustment
+    # paste user image onto maze background image, offset at the given position (y, x) mazelib -> (x, y) pillow paste 
+    im.paste(user_image, tuple(round(i * factor + factor * 0.1) for i in reversed(position))) # 0.1 is cuz of 0.8 adjustment
 
+    # save
+    buffer = io.BytesIO()
+    im.save(buffer, 'PNG')
+    return buffer
+  
   # return as file object
-  buffer = io.BytesIO()
-  im.save(buffer, 'PNG')
+  buffer = await asyncio.to_thread(blocking)
   return discohook.File('maze.png', content = buffer.getvalue())

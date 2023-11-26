@@ -1,4 +1,5 @@
 import time
+import asyncio
 import discohook
 import numpy as np
 
@@ -56,7 +57,7 @@ async def move(interaction, x, y):
       embed.description = 'Timed out. You did not finish the maze.'
       return await interaction.response.update_message(embed = embed, view = None)
 
-    maze_data = await helpers.draw_maze(np.array(record['grid']), tuple(record['start']), tuple(record['end']))
+    maze_data = await asyncio.to_thread(helpers.draw_maze, np.array(record['grid']), tuple(record['start']), tuple(record['end']))
     app.mazes[maze_id] = maze_data
 
   # calculate steps below, this can probably be simplified in the future
@@ -124,10 +125,10 @@ async def move(interaction, x, y):
   else:
     raise ValueError('Bad move input', x, y)
 
-  image = await helpers.draw_player_on_maze(app, maze_data, tuple(position), interaction.author, level) # numpy uses position tuple index
+  image_file = await helpers.draw_player_on_maze(app, maze_data, tuple(position), interaction.author, level) # numpy uses position tuple index
 
   embed = interaction.message.embeds[0]
-  embed.set_image(image)
+  embed.set_image(image_file)
 
   # if win, stop the view otherwise send an update
   if position == end:

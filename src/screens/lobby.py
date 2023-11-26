@@ -30,9 +30,13 @@ async def start_button(interaction):
   app = interaction.client
   helpers = app.helpers
 
-  maze_id, m = await asyncio.to_thread(helpers.generate_maze, level)
+  def blocking():
+    maze_id, m = helpers.generate_maze(level)
+    maze_data = helpers.draw_maze(m.grid.flatten(), m.start, m.end)
+    return maze_id, m, maze_data
 
-  maze_data = await helpers.draw_maze(m.grid.flatten(), m.start, m.end)
+  maze_id, m, maze_data = await asyncio.to_thread(blocking)
+
   app.mazes[maze_id] = maze_data
 
   seconds = helpers.level_to_seconds(level)
@@ -50,8 +54,8 @@ async def start_button(interaction):
       ]),
       color = COLOR_BLURPLE
     )
-    image = await helpers.draw_player_on_maze(app, maze_data, m.start, user, level)
-    embed.set_image(image)
+    image_file = await helpers.draw_player_on_maze(app, maze_data, m.start, user, level)
+    embed.set_image(image_file)
     return user_id, embed
 
   results = await asyncio.gather(*[prepare_mazes(user_id) for user_id in player_ids])
@@ -60,7 +64,7 @@ async def start_button(interaction):
   token_expires_at = int(interaction.created_at + 60 * 15)
   await app.db.create_maze(maze_id, m.grid.flatten().tolist(), level, m.start, m.end, timeout, interaction.token, token_expires_at, player_ids)
   
-  await asyncio.gather(*[ # sends altogether afterwards so everyone starts somewhat at the same time
+  await asyncio.gather(*[ # sends altogether afterwards so to ensure everyone starts somewhat at the same time
     MazeView(interaction, data = (maze_id, m.start, m.end, timeout, level, user_id, embed)).followup() 
     for user_id, embed in results
   ])
