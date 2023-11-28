@@ -31,11 +31,12 @@ async def start_button(interaction):
   helpers = app.helpers
 
   def blocking():
-    maze_id, m = helpers.generate_maze(level)
+    m = helpers.generate_maze(level)
     maze_data = helpers.draw_maze(m.grid.flatten(), m.start, m.end)
-    return maze_id, m, maze_data
+    return m, maze_data
 
-  maze_id, m, maze_data = await asyncio.to_thread(blocking)
+  m, maze_data = await asyncio.to_thread(blocking)
+  maze_id = interaction.message.id
 
   app.mazes[maze_id] = maze_data
 

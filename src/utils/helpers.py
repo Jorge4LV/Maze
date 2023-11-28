@@ -4,7 +4,6 @@ Code that might be reused in other places or just odd.
 
 import io
 import math
-import random
 import string
 import asyncio
 import mazelib
@@ -30,10 +29,6 @@ def get_power_of_2(n): # 147 becomes 256
       return i
     i *= 2
 
-def generate_maze_id(): # returns a unique 16 letter string
-  chars = tuple(string.ascii_letters + string.digits + '-_')
-  return ''.join(random.choice(chars) for _ in range(16))
-
 def generate_maze(level): # blocking
   size = level + 2
   m = mazelib.Maze()
@@ -42,7 +37,7 @@ def generate_maze(level): # blocking
   m.generate_monte_carlo(10, 3, 1.0) 
   # ^ this essentially generates 10 mazes, with 3 different entrances = 30 variations, and picks the hardest one
   # thats solely the reason why its slow, decrease those values to make it faster
-  return generate_maze_id(), m
+  return m
 
 def draw_maze(flat_grid, start, end): # blocking, returns 2d grid and PIL.Image
   size = int(math.sqrt(len(flat_grid))) # starts as flattened so we can reuse this from db
