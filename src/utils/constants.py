@@ -14,3 +14,4 @@ MAX_PLAYERS = 5 # max 5 people per lobby, can go higher but breaks embed if it's
 TIME_LIMIT_BASE = 60 # level 1-5 = 60 seconds, which is between 7x7 and 15x15 since size is (level + 2) and * 2 + 1 (after mazelib)
 TIME_LIMIT_THRESHOLD = 5 # after level 5 it adds 5 extra seconds per level = base + (level - threshold) * 5
 IMAGE_SIZE = 1024 # size of maze images in pixels
+TOP_LIMIT = 25 # how many entries to show on the /top command, max is approx 33

@@ -2,7 +2,7 @@ import time
 import asyncio
 import discohook
 from deta import Deta, Query, Record, Updater
-from .constants import COLOR_GREEN, MAX_LEVELS
+from .constants import COLOR_GREEN, MAX_LEVELS, TOP_LIMIT
 
 class Database(Deta):
   def __init__(self, app, key):
@@ -64,7 +64,7 @@ class Database(Deta):
       if time_taken # only if they won / none = didn't finish / 0 = gave up
     }
     new_pb_scores = {} # beat their personal best
-    new_top_scores = {} # top 2-10
+    new_top_scores = {} # top 2-TOP_LIMIT
     new_wr_score = None # top 1
 
     if winner_scores: # if some one beat the maze, check for new pbs
@@ -140,10 +140,10 @@ class Database(Deta):
           if user_id in self.app.stats:
             self.app.stats[user_id][level] = (time_taken, now)
         
-        # check for new top 10s or world records, which means if that record key is the top 10 score
+        # check for new top TOP_LIMITs or world records, which means if that record key is the top TOP_LIMIT score
         query = Query()
         query.equals('level', level)
-        records = (await self.stats.fetch([query], limit = 10))['items']
+        records = (await self.stats.fetch([query], limit = TOP_LIMIT))['items']
 
         # leaderboards wont be empty due to inserting records in it just now
         if records[0]['key'] in new_keys:
@@ -219,7 +219,7 @@ class Database(Deta):
   async def get_top(self, level):
     query = Query()
     query.equals('level', level)
-    records = (await self.stats.fetch([query], limit = 10))['items']
+    records = (await self.stats.fetch([query], limit = TOP_LIMIT))['items']
     return [
       (record['user_id'], record['name'], record['time_taken'], record['timestamp'])
       for record in records
