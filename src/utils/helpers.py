@@ -14,6 +14,14 @@ from mazelib.solve.BacktrackingSolver import BacktrackingSolver
 from PIL import Image
 from .constants import TIME_LIMIT_BASE, TIME_LIMIT_THRESHOLD, IMAGE_SIZE
 
+blocked_pattern = np.array([
+  [0, 1, 0, 0, 0],
+  [0, 1, 0, 1, 1],
+  [0, 0, 0, 0, 0],
+  [1, 1, 0, 1, 0],
+  [0, 0, 0, 1, 0]
+])
+
 def level_to_size(level):
   return (level + 2) * 2 + 1
 
@@ -34,9 +42,14 @@ def generate_maze(level): # blocking
   m = mazelib.Maze()
   m.generator = Prims(size, size)
   m.solver = BacktrackingSolver()
-  m.generate_monte_carlo(10, 3, 1.0) 
-  # ^ this essentially generates 10 mazes, with 3 different entrances = 30 variations, and picks the hardest one
-  # thats solely the reason why its slow, decrease those values to make it faster
+  while True:
+    m.generate_monte_carlo(10, 3, 1.0)
+    # ^ this essentially generates 10 mazes, with 3 different entrances = 30 variations, and picks the hardest one
+    # thats solely the reason why its slow, decrease those values to make it faster
+
+    # prevents level 1 from generating "that" pattern
+    if level != 1 or not np.array_equal(m.grid[1:6, 1:6], blocked_pattern): 
+      break
   return m
 
 def draw_maze(flat_grid, start, end): # blocking, returns 2d grid and PIL.Image
