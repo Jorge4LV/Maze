@@ -54,9 +54,9 @@ def run():
     if isinstance(error, discohook.errors.CheckFailure):
       return print('Ignoring check failure', str(interaction.author), interaction.data['custom_id'].split(':')[0])
     if interaction.responded:
-      await interaction.response.followup('Sorry, an error has occured (after responding).')
+      await interaction.response.followup('Sorry, an error has occurred (after responding).')
     else:
-      await interaction.response.send('Sorry, an error has occured.')
+      await interaction.response.send('Sorry, an error has occurred.')
     trace = tuple(traceback.TracebackException.from_exception(error).format())
     app.errors.append(trace)
     text = ''.join(trace)
