@@ -13,7 +13,7 @@ def get_valid_moves(maze_grid, position): # returns disabled true/false for left
   return left_disabled, right_disabled, up_disabled, down_disabled
 
 async def before_move_check(interaction): # stop processing if timed out already or not maze owner
-  data = interaction.payload['message']['components'][0]['components'][0]['custom_id'].split(':')[2:]
+  data = interaction.payload['message']['components'][0]['components'][1]['custom_id'].split(':')[2:] # up button is row 0 column 1
   maze_id = data[0]
   position = list(map(int, data[1:3]))
   end = list(map(int, data[3:5]))
@@ -144,6 +144,10 @@ async def move(interaction, x, y):
   
   await MazeView(interaction, 1, data = (maze_id, position, end, timeout, level, user_id, embed)).update()
 
+@discohook.button.new(emoji = '❔', style = discohook.ButtonStyle.grey, custom_id = 'maze_help:v0.0')
+async def help_button(interaction): # this button is purely to fill the empty space
+  await interaction.response.send('Use the arrow buttons to navigate the maze. Reach the green square to win!', ephemeral = True)
+
 @discohook.button.new(emoji = '⬆️', custom_id = 'maze_up:v0.0')
 async def up_button(interaction):
   await move(interaction, 0, -1) # pillow draws from top left, so this is negative
@@ -160,7 +164,7 @@ async def left_button(interaction):
 async def right_button(interaction):
   await move(interaction, 1, 0)
 
-@discohook.button.new('Give Up', emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'maze_giveup:v0.0')
+@discohook.button.new(emoji = '🏳️', style = discohook.ButtonStyle.red, custom_id = 'maze_giveup:v0.0')
 async def giveup_button(interaction):
   data = await before_move_check(interaction)
   if not data:
@@ -227,10 +231,11 @@ class MazeView(discohook.View):
         disabled = right_disabled
       )
       
-      self.add_buttons(dynamic_up_button, dynamic_down_button, dynamic_left_button, dynamic_right_button, giveup_button)
+      self.add_buttons(help_button, dynamic_up_button, giveup_button)
+      self.add_buttons(dynamic_left_button, dynamic_down_button, dynamic_right_button)
 
     else: # persistent
-      self.add_buttons(up_button, down_button, left_button, right_button, giveup_button)
+      self.add_buttons(help_button, up_button, down_button, left_button, right_button, giveup_button)
 
   async def followup(self): # for race begin only
     await self.interaction.response.followup(self.content, embed = self.embed, view = self)

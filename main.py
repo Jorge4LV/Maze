@@ -9,6 +9,7 @@ if os.path.isfile(path): # <-- file won't exist in production
   for key, value in config.items():
     os.environ[key] = value
   os.environ['test'] = '1'
+  print('Using test bot configs!')
 
 
 from src.bot import run

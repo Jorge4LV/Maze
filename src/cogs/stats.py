@@ -1,9 +1,20 @@
 import discohook
 from ..utils.constants import COLOR_BLURPLE
 
-@discohook.command.slash('stats', description = 'View your stats or someone else\'s!', options = [
-  discohook.Option.user('user', 'View this user\'s stats.')
-])
+@discohook.command.slash('stats', description = 'View your stats or someone else\'s!', 
+  options = [
+    discohook.Option.user('user', 'View this user\'s stats.')
+  ],
+  integration_types = [
+    discohook.ApplicationIntegrationType.user,
+    discohook.ApplicationIntegrationType.guild
+  ],
+  contexts = [
+    discohook.InteractionContextType.guild,
+    discohook.InteractionContextType.bot_dm,
+    discohook.InteractionContextType.private_channel
+  ]
+)
 async def stats_command(interaction, user = None):
   if not user:
     user = interaction.author

@@ -97,9 +97,9 @@ def run():
   )
 
   # Load persistent views/components  
-  app.load_components(LobbyView())
-  app.load_components(MazeView())
-  app.load_components(TopView())
+  app.load_view(LobbyView())
+  app.load_view(MazeView())
+  app.load_view(TopView())
 
   # Attach / route for debugging
   @app.route('/', methods = ['GET'])
