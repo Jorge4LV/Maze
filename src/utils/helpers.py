@@ -78,7 +78,7 @@ async def draw_player_on_maze(app, maze_data, position, user, level): # async to
   user_image = app.avatars.get(key)
   if not user_image:
     if user.avatar.default:
-      user_image = await asyncio.to_thread(Image.open, 'src/assets/{}.png'.format(user.avatar._hash))
+      user_image = await asyncio.to_thread(Image.open, 'src/assets/{}.png'.format(user.avatar.hash))
     else:
       size = get_power_of_2(round(factor)) # avatar png sizes can only be in powers of 2
       url = '.'.join(str(user.avatar).split('.')[:-1]) + '.png?size=' + str(size)
