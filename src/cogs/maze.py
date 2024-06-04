@@ -26,4 +26,6 @@ from ..utils.helpers import level_to_size
   ]
 )
 async def maze_command(interaction, level, image_size = IMAGE_SIZE, coop = False):
+  if image_size/level_to_size(level) < 8:
+    return await interaction.response.send('Image size `{0}x{0}` is too small for level `{1}`. Pick a bigger size.'.format(image_size, level), ephemeral = True)
   await LobbyView(interaction, level, image_size, coop).send()
