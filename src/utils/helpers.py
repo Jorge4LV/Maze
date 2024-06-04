@@ -83,7 +83,6 @@ async def draw_player_on_maze(app, maze_data, position, user, level, image_size)
     else:
       size = get_power_of_2(round(factor)) # avatar png sizes can only be in powers of 2
       url = '.'.join(str(user.avatar).split('.')[:-1]) + '.png?size=' + str(size)
-      print('this is url', url)
       async with app.session.get(url) as resp:
         if resp.status != 200:
           raise ValueError('Fetch avatar returned bad status', resp.status)
