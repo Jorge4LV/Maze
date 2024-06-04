@@ -20,6 +20,8 @@ async def before_move_check(interaction): # stop processing if timed out already
   timeout = int(data[5])
   level = int(data[6])
   user_id = data[7]
+  image_size = int(data[8])
+  coop = int(data[9])
 
   # check if this maze is already over
   if time.time() > timeout:
@@ -30,19 +32,19 @@ async def before_move_check(interaction): # stop processing if timed out already
     await interaction.client.db.check_maze_finished(maze_id)
     return
     
-  # check if they are maze owner
-  if user_id != interaction.author.id: # after, lets them update the maze if it ended
+  # check if they are maze owner if it's not coop
+  if not coop and user_id != interaction.author.id: # after, lets them update the maze if it ended
     await interaction.response.send('This is not your maze.', ephemeral = True)
     return
   
-  return maze_id, position, end, timeout, level, user_id
+  return maze_id, position, end, timeout, level, user_id, image_size, coop
 
 async def move(interaction, x, y):
   data = await before_move_check(interaction)
   if not data:
     return
   
-  maze_id, position, end, timeout, level, user_id = data
+  maze_id, position, end, timeout, level, user_id, image_size, coop = data
   app = interaction.client
   helpers = app.helpers
 
@@ -57,7 +59,7 @@ async def move(interaction, x, y):
       embed.description = 'Timed out. You did not finish the maze.'
       return await interaction.response.update_message(embed = embed, view = None)
 
-    maze_data = await asyncio.to_thread(helpers.draw_maze, np.array(record['grid']), tuple(record['start']), tuple(record['end']))
+    maze_data = await asyncio.to_thread(helpers.draw_maze, np.array(record['grid']), tuple(record['start']), tuple(record['end']), image_size)
     app.mazes[maze_id] = maze_data
 
   # calculate steps below, this can probably be simplified in the future
@@ -125,7 +127,7 @@ async def move(interaction, x, y):
   else:
     raise ValueError('Bad move input', x, y)
 
-  image_file = await helpers.draw_player_on_maze(app, maze_data, tuple(position), interaction.author, level) # numpy uses position tuple index
+  image_file = await helpers.draw_player_on_maze(app, maze_data, tuple(position), interaction.author, level, image_size) # numpy uses position tuple index
 
   embed = interaction.message.embeds[0]
   embed.set_image(image_file)
@@ -142,7 +144,7 @@ async def move(interaction, x, y):
   
   embed.description = 'You moved {} {} step(s).\nMaze ends <t:{}:R>.'.format(text, steps, timeout)
   
-  await MazeView(interaction, 1, data = (maze_id, position, end, timeout, level, user_id, embed)).update()
+  await MazeView(interaction, False, data = (maze_id, position, end, timeout, level, user_id, embed, image_size, coop)).update()
 
 @discohook.button.new(emoji = '❔', style = discohook.ButtonStyle.grey, custom_id = 'maze_help:v0.0')
 async def help_button(interaction): # this button is purely to fill the empty space
@@ -179,30 +181,20 @@ async def giveup_button(interaction):
   await interaction.client.db.update_maze(maze_id, interaction.author.id, 0)
 
 class MazeView(discohook.View):
-  def __init__(self, interaction = None, flag = None, data = None):
+  def __init__(self, interaction = None, is_start = True, data = None):
     super().__init__()
 
     if interaction:
       self.interaction = interaction
       
-      if not flag: # race begin
-        maze_id, start, end, timeout, level, user_id, embed = data
-        
+      # position is start on race begin
+      maze_id, position, end, timeout, level, user_id, self.embed, image_size, coop = data
+
+      if is_start: # race begin
         self.content = '<@{}>'.format(user_id)
-        self.embed = embed
 
-        position = start
-
-      elif flag == 1: # update position (clicked a button)
-        maze_id, position, end, timeout, level, user_id, embed = data
-
-        self.embed = embed
-      
-      else:
-        raise ValueError('Unhandled MazeView flag', flag)
-
-      data = ':{}:{}:{}:{}:{}:{}:{}:{}'.format(maze_id, *position, *end, timeout, level, user_id) # stuff all these values in a custom id
-      # 9 + 1 + 16 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 10 + 1 + 2 + 19 = 71, still 29 chars left
+      data = ':{}:{}:{}:{}:{}:{}:{}:{}:{}:{}'.format(maze_id, *position, *end, timeout, level, user_id, image_size, coop) # stuff all these values in a custom id
+      # 9 + 1 + 16 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 10 + 1 + 2 + 19 + 4 + 1 = 76, still 24 chars left
     
       maze_grid = interaction.client.mazes[maze_id][0]
       left_disabled, right_disabled, up_disabled, down_disabled = get_valid_moves(maze_grid, position)

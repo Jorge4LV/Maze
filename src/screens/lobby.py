@@ -24,7 +24,11 @@ async def start_button(interaction):
 
   await interaction.response.update_message(embed = embed, view = None)
 
-  level = int(embed.fields[0]['value'].split('\n')[0].split(' ')[-1][:-1].strip('`')) # parse it out
+  parts = interaction.data['custom_id'].split(':')[2:] # ignore name:version
+  level = int(parts[0])
+  image_size = int(parts[1])
+  coop = int(parts[2]) # 0 or 1
+
   player_ids = re.sub('<|@|!|>', '', embed.fields[1]['value']).split() # ! is lib issue
 
   app = interaction.client
@@ -32,7 +36,7 @@ async def start_button(interaction):
 
   def blocking():
     m = helpers.generate_maze(level)
-    maze_data = helpers.draw_maze(m.grid.flatten(), m.start, m.end)
+    maze_data = helpers.draw_maze(m.grid.flatten(), m.start, m.end, image_size)
     return m, maze_data
 
   m, maze_data = await asyncio.to_thread(blocking)
@@ -55,7 +59,7 @@ async def start_button(interaction):
       ]),
       color = COLOR_BLURPLE
     )
-    image_file = await helpers.draw_player_on_maze(app, maze_data, m.start, user, level)
+    image_file = await helpers.draw_player_on_maze(app, maze_data, m.start, user, level, image_size)
     embed.set_image(image_file)
     return user_id, embed
 
@@ -66,7 +70,7 @@ async def start_button(interaction):
   await app.db.create_maze(maze_id, m.grid.flatten().tolist(), level, m.start, m.end, timeout, interaction.token, token_expires_at, player_ids)
   
   await asyncio.gather(*[ # sends altogether afterwards to ensure everyone starts somewhat at the same time
-    MazeView(interaction, data = (maze_id, m.start, m.end, timeout, level, user_id, embed)).followup() 
+    MazeView(interaction, data = (maze_id, m.start, m.end, timeout, level, user_id, embed, image_size, coop)).followup() 
     for user_id, embed in results
   ])
 start_button.checks.append(is_host)
@@ -103,7 +107,7 @@ async def cancel_button(interaction):
 cancel_button.checks.append(is_host)
 
 class LobbyView(discohook.View):
-  def __init__(self, interaction = None, level = None):
+  def __init__(self, interaction = None, level = None, image_size = None, coop = None):
     super().__init__()
 
     if interaction:
@@ -135,7 +139,14 @@ class LobbyView(discohook.View):
 
       self.embed.add_field('Players (1)', interaction.author.mention, inline = True)
 
-      self.add_buttons(start_button, join_button, cancel_button)
+      dynamic_start_button = discohook.Button(
+        start_button.label,
+        emoji = start_button.emoji,
+        style = start_button.style, # stuff data in custom id
+        custom_id = '{}:{}:{}:{}'.format(start_button.custom_id, level, image_size, int(coop))
+      )
+
+      self.add_buttons(dynamic_start_button, join_button, cancel_button)
 
     else: # persistent view
       self.add_buttons(start_button, join_button, cancel_button)

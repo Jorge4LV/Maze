@@ -1,6 +1,6 @@
 import discohook
 from ..screens.lobby import LobbyView
-from ..utils.constants import MAX_LEVELS
+from ..utils.constants import MAX_LEVELS, IMAGE_SIZE
 from ..utils.helpers import level_to_size
 
 @discohook.command.slash('maze', description = 'Starts a maze race!', 
@@ -9,6 +9,11 @@ from ..utils.helpers import level_to_size
       discohook.Choice(name = 'Level {0} ({1}x{1})'.format(i, level_to_size(i)), value = i)
       for i in range(1, MAX_LEVELS + 1)
     ]),
+    discohook.Option.integer('image_size', 'Select the image size, smaller = loads faster, default is 1024x1024.', choices = [
+      discohook.Choice(name = '{0}x{0}'.format(i), value = i)
+      for i in (1024, 512, 256)
+    ]),
+    discohook.Option.boolean('coop', 'Whether to allow other people to click maze buttons. Default is false.')
   ],
   integration_types = [
     discohook.ApplicationIntegrationType.user,
@@ -20,5 +25,5 @@ from ..utils.helpers import level_to_size
     discohook.InteractionContextType.private_channel
   ]
 )
-async def maze_command(interaction, level):
-  await LobbyView(interaction, level).send()
+async def maze_command(interaction, level, image_size = IMAGE_SIZE, coop = False):
+  await LobbyView(interaction, level, image_size, coop).send()

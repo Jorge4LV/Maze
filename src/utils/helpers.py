@@ -52,7 +52,7 @@ def generate_maze(level): # blocking
       break
   return m
 
-def draw_maze(flat_grid, start, end): # blocking, returns 2d grid and PIL.Image
+def draw_maze(flat_grid, start, end, image_size): # blocking, returns 2d grid and PIL.Image
   size = int(math.sqrt(len(flat_grid))) # starts as flattened so we can reuse this from db
   maze_grid = flat_grid.reshape((size, size)) # unflatten it
   maze_grid[start] = 0 # makes start and end pathway tiles, by default they're walls
@@ -64,17 +64,18 @@ def draw_maze(flat_grid, start, end): # blocking, returns 2d grid and PIL.Image
   image_grid[end] = (0, 255, 0) # end = GREEN
   
   maze_image = Image.fromarray(image_grid.astype(np.uint8)) # this blocks
-  maze_image = maze_image.resize((IMAGE_SIZE, IMAGE_SIZE), Image.Resampling.NEAREST) # so does this
+  maze_image = maze_image.resize((image_size, image_size), Image.Resampling.NEAREST) # so does this
   
   return maze_grid, maze_image
 
-async def draw_player_on_maze(app, maze_data, position, user, level): # async to fetch user avatar
+async def draw_player_on_maze(app, maze_data, position, user, level, image_size): # async to fetch user avatar
   maze_grid, maze_image = maze_data
 
-  factor = IMAGE_SIZE/len(maze_grid) # size of 1 tile in pixels
+  factor = image_size/len(maze_grid) # size of 1 tile in pixels
+  print('this factor', factor)
 
   # fetch user background if not cached
-  key = '{}:{}'.format(user.id, level) # can reuse avatar for same levels somewhere else
+  key = '{}:{}:{}'.format(user.id, level, image_size) # can reuse avatar for same levels somewhere else
   user_image = app.avatars.get(key)
   if not user_image:
     if user.avatar.default:
